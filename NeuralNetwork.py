@@ -37,9 +37,9 @@ class Neuron:
         self.outputs.append(out_axon)
 
     def forward_prop(self, inputs):
+        if self.result != 0.0:
+            return self.result
         total = 0.0
-        self.error = 0.0
-        self.result = 0.0
         if self.index >= 0:
             total = inputs[self.index]
             #print(f'Input neuron {self.index} found value {inputs[self.index]}')
@@ -58,6 +58,8 @@ class Neuron:
         #print()
 
     def back_prop(self):
+        if self.error != 0.0:
+            return
         for out_axon in self.outputs:
             out_n = out_axon.output
             out_n.back_prop()
@@ -121,13 +123,25 @@ class Network:
     # Used in both train() and test() to get output from the current network
     def forward_prop(self, inputs):
         print(f'Performing forward propagation')
+        for in_n in self.inputs:
+            in_n.result = 0.0
+        for h_layer in self.hidden_layers:
+            for h_n in h_layer:
+                h_n.result = 0.0
         for out_n in self.outputs:
+            out_n.result = 0.0
             out_n.forward_prop(inputs)
 
     # Used with train() to modify weights and biases to reduce error
     def back_prop(self):
         print(f'Performing backward propagation')
+        for h_layer in self.hidden_layers:
+            for h_n in h_layer:
+                h_n.error = 0.0
+        for out_n in self.outputs:
+            out_n.error = 0.0
         for in_n in self.inputs:
+            in_n.error = 0.0
             in_n.back_prop()
 
     # Given a datum, produce an output and compare against the target, then perform backprop to reduce error
