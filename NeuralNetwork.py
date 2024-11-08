@@ -27,6 +27,8 @@ class Neuron:
         self.bias = bias
         self.result = 0.0
         self.error = 0.0
+        #self.f_prop_done = False
+        self.b_prop_done = False
 
     def connect_input(self, in_n):
         in_axon = Axon(in_n, self)
@@ -58,11 +60,11 @@ class Neuron:
         #print()
 
     def back_prop(self):
-        if self.error != 0.0:
-            return
         for out_axon in self.outputs:
             out_n = out_axon.output
             out_n.back_prop()
+        if self.b_prop_done:
+            return
         gradient = self.result * (1.0 - self.result)
         delta = self.error * gradient
         # print(f'Error calc: {self.error} {gradient} {delta}')
@@ -72,6 +74,7 @@ class Neuron:
                 in_n.error += in_n.error * in_axon.weight
                 in_axon.weight -= delta * in_n.result * learning_rate
         self.bias -= delta * learning_rate
+        self.b_prop_done = True
 
     def draw(self, canvas, color='black'):
         canvas.create_oval(self.x - neuron_scale, self.y - neuron_scale, self.x + neuron_scale, self.y + neuron_scale, fill=color)
@@ -138,10 +141,13 @@ class Network:
         for h_layer in self.hidden_layers:
             for h_n in h_layer:
                 h_n.error = 0.0
+                h_n.b_prop_done = False
         for out_n in self.outputs:
             out_n.error = 0.0
+            out_n.b_prop_done = False
         for in_n in self.inputs:
             in_n.error = 0.0
+            in_n.b_prop_done = False
             in_n.back_prop()
 
     # Given a datum, produce an output and compare against the target, then perform backprop to reduce error
